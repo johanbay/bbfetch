@@ -8,6 +8,7 @@ import requests
 import functools
 import blackboard
 import collections
+import markdown2
 from blackboard import logger, ParserError, BadAuth, BlackboardSession
 # from groups import get_groups
 from blackboard.gradebook import (
@@ -161,6 +162,8 @@ class Grading(blackboard.Serializable):
         for g in self.get_student_groups(student):
             for c in classes:
                 if g.name == c:
+                    return student.username not in self.negative_list
+                elif student.username in self.positive_list:
                     return True
         return False
 
@@ -193,7 +196,7 @@ class Grading(blackboard.Serializable):
                 cell.append('\u2714')  # HEAVY CHECK MARK
             elif isinstance(attempt.score, numbers.Real):
                 cell.append('%g' % attempt.score)
-        return ''.join(cell)
+        return ''.join(cell[-3:])
 
     def get_gradebook_columns(self):
         columns = [
@@ -513,7 +516,7 @@ class Grading(blackboard.Serializable):
         feedback_file = os.path.join(directory, 'comments.txt')
         try:
             with open(feedback_file) as fp:
-                return fp.read()
+                return markdown2.markdown(fp.read())
         except FileNotFoundError:
             return
 
